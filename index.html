@@ -14,12 +14,28 @@ void setup() {
   lcd.setCursor(0, 0); lcd.print("Merhaba!");
   lcd.setCursor(0, 1); lcd.print("ESP32-S3 hazir");
 }
-void loop() { }</pre><div class="lesson"><b>Kod ne yapıyor?</b><br>Wire I²C haberleşmesini; LiquidCrystal_I2C LCD komutlarını sağlar. lcd(0x27,16,2): adres, sütun, satır. Wire.begin(8,9): SDA/SCL pinleri. init başlatır, backlight ışığı açar, setCursor yazı yerini seçer, print metni yazar. Mesaj sabit olduğu için loop boş kalır.</div></div></div></section><section id="wifi" class="project"><div class="tag">PROJE 03 · WI-FI</div><h2>Telefondan LED’i kontrol et</h2><div class="cols"><div><h3>Montaj ve açma</h3><p>LED’i 220–330 Ω dirençle GPIO 4’e, kısa bacağını GND’ye bağla. WIFI_ADI ve WIFI_SIFRESI alanlarını doldur. Yükledikten sonra Seri Monitör’ü 115200 baud aç, IP adresini telefonda aç. Telefon ve kart aynı Wi-Fi’da olmalı.</p><p class="note">Bu web sunucusu yerel ağ içindir. Parolanı paylaşma; dışarıya port yönlendirme açma.</p></div><div><h3>Kod iskeleti</h3><pre>#include &lt;WiFi.h&gt;
+void loop() { }</pre><div class="lesson"><b>Kod ne yapıyor?</b><br>Wire I²C haberleşmesini; LiquidCrystal_I2C LCD komutlarını sağlar. lcd(0x27,16,2): adres, sütun, satır. Wire.begin(8,9): SDA/SCL pinleri. init başlatır, backlight ışığı açar, setCursor yazı yerini seçer, print metni yazar. Mesaj sabit olduğu için loop boş kalır.</div></div></div></section><section id="wifi" class="project"><div class="tag">PROJE 03 · WI-FI</div><h2>Telefondan LED’i kontrol et</h2><div class="cols"><div><h3>Montaj ve açma</h3><p>LED’i 220–330 Ω dirençle GPIO 4’e, kısa bacağını GND’ye bağla. WIFI_ADI ve WIFI_SIFRESI alanlarını doldur. Yükledikten sonra Seri Monitör’ü 115200 baud aç, IP adresini telefonda aç. Telefon ve kart aynı Wi-Fi’da olmalı.</p><p class="note">Bu web sunucusu yerel ağ içindir. Parolanı paylaşma; dışarıya port yönlendirme açma.</p></div><div><h3>Tam Arduino kodu</h3><pre>#include &lt;WiFi.h&gt;
 #include &lt;WebServer.h&gt;
-const char* ssid="WIFI_ADI";
-const char* password="WIFI_SIFRESI";
+const char* ssid = "WIFI_ADI";
+const char* password = "WIFI_SIFRESI";
+const int ledPin = 4;
 WebServer server(80);
-// WiFi.begin(ssid, password);
-// /on yolunda LED'i yak
-// /off yolunda LED'i sondur
-// loop içinde server.handleClient()</pre><div class="lesson"><b>Kod ne yapıyor?</b><br>WiFi.h ağa bağlar; WebServer.h tarayıcı isteklerini karşılar. SSID ve parola ağ bilgilerini tutar. 80 web portudur. Bağlandıktan sonra localIP() adresi Seri Monitör’e yazdırılır. /on ve /off adresleri GPIO çıkışını değiştirir. handleClient() gelen istekleri sürekli dinler.</div></div></div><p class="note">Web sunucu örneğini çalıştırmadan önce kart pinout’unu ve Wi-Fi bilgilerini doğrula.</p></section><section id="tips"><h2>Güvenli montaj</h2><div class="guide"><article><b>Pinout’u kontrol et</b><p class="small">GPIO numaraları kart modeline göre kullanılabilir.</p></article><article><b>5 V uygulama</b><p class="small">ESP32-S3 GPIO pinleri 3.3 V lojiktir.</p></article><article><b>Önce USB’yi çıkar</b><p class="small">Kablo değiştirirken gücü kes, GND ortaklığını doğrula.</p></article></div></section><footer class="small">ÜMEAL · ESP32-S3 Atölye · Açık kaynak · MIT License</footer></main></body></html>
+
+void showPage() {
+  server.send(200, "text/html",
+    "&lt;h1&gt;ESP32-S3 LED&lt;/h1&gt;&lt;a href=/on&gt;AC&lt;/a&gt; | &lt;a href=/off&gt;KAPAT&lt;/a&gt;");
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) delay(300);
+  Serial.println(WiFi.localIP());
+  server.on("/", showPage);
+  server.on("/on", []() { digitalWrite(ledPin, HIGH); showPage(); });
+  server.on("/off", []() { digitalWrite(ledPin, LOW); showPage(); });
+  server.begin();
+}
+
+void loop() { server.handleClient(); }</pre><div class="lesson"><b>Kod ne yapıyor?</b><br>WiFi.h ağa bağlar; WebServer.h tarayıcı isteklerini karşılar. SSID ve parola ağ bilgilerini tutar. 80 web portudur. Bağlandıktan sonra localIP() adresi Seri Monitör’e yazdırılır. /on ve /off adresleri GPIO çıkışını değiştirir. handleClient() gelen istekleri sürekli dinler.</div></div></div><p class="note">Web sunucu örneğini çalıştırmadan önce kart pinout’unu ve Wi-Fi bilgilerini doğrula.</p></section><section id="tips"><h2>Güvenli montaj</h2><div class="guide"><article><b>Pinout’u kontrol et</b><p class="small">GPIO numaraları kart modeline göre kullanılabilir.</p></article><article><b>5 V uygulama</b><p class="small">ESP32-S3 GPIO pinleri 3.3 V lojiktir.</p></article><article><b>Önce USB’yi çıkar</b><p class="small">Kablo değiştirirken gücü kes, GND ortaklığını doğrula.</p></article></div></section><footer class="small">ÜMEAL · ESP32-S3 Atölye · Açık kaynak · MIT License</footer></main></body></html>
